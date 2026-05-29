@@ -3,8 +3,11 @@ import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import jwt from '@fastify/jwt'
 import rateLimit from '@fastify/rate-limit'
+import multipart from '@fastify/multipart'
 
 import { healthRoutes } from './modules/health/routes'
+import { authRoutes } from './modules/auth/routes'
+import { fileRoutes } from './modules/file/routes'
 
 async function buildApp() {
   const fastify = Fastify({
@@ -25,6 +28,12 @@ async function buildApp() {
   await fastify.register(rateLimit, {
     max: 100,
     timeWindow: '1 minute',
+  })
+  await fastify.register(multipart, {
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB
+      files: 10, // 最大10个文件
+    },
   })
 
   // 响应格式统一
@@ -51,6 +60,8 @@ async function buildApp() {
 
   // 注册路由
   await fastify.register(healthRoutes, { prefix: '/api' })
+  await fastify.register(authRoutes, { prefix: '/api' })
+  await fastify.register(fileRoutes, { prefix: '/api' })
 
   return fastify
 }
