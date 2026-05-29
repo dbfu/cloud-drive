@@ -1,0 +1,83 @@
+# TC-UI-003 文件管理页面渲染
+# ui 模块 - 测试用例
+
+id: TC-UI-003
+title: 文件管理页面渲染
+version: 1.0
+priority: P0
+module: ui
+tags: [file-manager, page, frontend, rendering]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/7
+
+preconditions:
+  - 前端服务正常运行
+  - 用户已登录
+  - 浏览器可正常访问
+
+steps:
+  - action: 访问文件管理页面
+    url: /files 或 /
+    expected:
+      - 页面正常渲染
+      - 无JavaScript错误
+      - 样式正确加载
+
+  - action: 验证页面布局
+    expected:
+      - 顶部导航栏存在
+      - 用户信息显示
+      - 文件列表区域存在
+      - 操作按钮区域存在
+
+  - action: 验证导航功能
+    expected:
+      - 导航栏显示用户名/头像
+      - 退出登录按钮存在
+      - 面包屑导航区域存在
+
+  - action: 验证操作按钮
+    expected:
+      - 上传文件按钮存在
+      - 新建文件夹按钮存在
+      - 刷新按钮存在（可选）
+
+  - action: 验证空状态
+    description: 当用户无文件时
+    expected:
+      - 显示空状态提示
+      - 提示引导上传文件
+
+  - action: 验证未登录访问
+    expected:
+      - 未登录访问时跳转登录页面
+      - 或显示登录提示
+
+expected_results:
+  - 文件管理页面完整渲染
+  - 导航和操作区域正确
+  - 未登录保护正常
+
+assertions:
+  - type: rendering
+    description: 页面正确渲染
+    validate:
+      - 页面布局正确
+      - 导航栏正确
+      - 操作区域正确
+
+  - type: auth_protection
+    description: 未登录保护
+    validate:
+      - 未登录跳转登录页

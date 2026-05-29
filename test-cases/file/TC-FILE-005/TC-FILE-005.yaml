@@ -1,0 +1,82 @@
+# TC-FILE-005 上传文件-视频
+# file 模块 - 测试用例
+
+id: TC-FILE-005
+title: 上传文件-视频
+version: 1.0
+priority: P0
+module: file
+tags: [upload, video, api, backend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/3
+  - https://github.com/dbfu/cloud-drive/issues/5
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+
+test_data:
+  supported_formats:
+    - mp4
+    - webm
+    - mov
+  max_size: 100MB
+
+steps:
+  - action: 上传mp4视频
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+        Content-Type: "multipart/form-data"
+      body:
+        file: "test.mp4 (binary)"
+        parentId: null
+    expected:
+      status: 200
+      code: 0
+      message: "上传成功"
+      data.type: "video"
+      data.mimeType: "video/mp4"
+
+  - action: 上传webm视频
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        file: "test.webm"
+    expected:
+      data.type: "video"
+      data.mimeType: "video/webm"
+
+  - action: 验证文件存储
+    expected:
+      - 文件存储在 uploads/{userId}/videos/
+      - 数据库有对应记录
+
+expected_results:
+  - 视频文件正确上传
+  - 文件类型正确识别为video
+  - 存储路径正确分类
+
+assertions:
+  - type: api_response
+    description: 上传接口返回正确
+    validate:
+      - response.body.code === 0
+      - response.body.data.type === "video"
+      - response.body.data.mimeType.startsWith("video/")

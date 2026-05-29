@@ -1,0 +1,62 @@
+# TC-AUTH-002 用户注册-用户名已存在
+# auth 模块 - 测试用例
+
+id: TC-AUTH-002
+title: 用户注册-用户名已存在
+version: 1.0
+priority: P1
+module: auth
+tags: [registration, error, api, backend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/1
+
+preconditions:
+  - 后端服务正常运行
+  - 数据库中已存在用户 "existinguser"
+
+test_data:
+  username: "existinguser"
+  password: "TestPass123!"
+
+steps:
+  - action: 发送注册请求使用已存在用户名
+    request:
+      method: POST
+      url: /api/auth/register
+      body:
+        username: "existinguser"
+        password: "TestPass123!"
+    expected:
+      status: 200
+      code: 2001
+      message: "用户名已存在"
+      data: null
+
+  - action: 前端注册页面测试
+    expected:
+      - 显示"用户名已存在"错误提示
+      - 用户停留在注册页面
+
+expected_results:
+  - 返回错误码2001
+  - 前端正确显示错误提示
+  - 不创建重复用户
+
+assertions:
+  - type: api_response
+    description: 返回用户名已存在错误
+    validate:
+      - response.body.code === 2001
+      - response.body.message === "用户名已存在"
+      - response.body.data === null

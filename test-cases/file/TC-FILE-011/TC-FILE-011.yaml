@@ -1,0 +1,85 @@
+# TC-FILE-011 删除文件
+# file 模块 - 测试用例
+
+id: TC-FILE-011
+title: 删除文件
+version: 1.0
+priority: P1
+module: file
+tags: [delete, file, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/4
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有已上传的文件
+
+steps:
+  - action: 删除文件
+    request:
+      method: DELETE
+      url: /api/files/{file_id}
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      code: 0
+      message: "删除成功"
+      data: null
+
+  - action: 验证文件已删除
+    expected:
+      - 数据库记录已删除
+      - 文件存储已删除
+
+  - action: 删除不存在的文件
+    request:
+      method: DELETE
+      url: /api/files/999999
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      code: 3001
+      message: "文件不存在"
+
+  - action: 删除他人文件
+    request:
+      method: DELETE
+      url: /api/files/{other_user_file_id}
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      code: 1003 或 3001
+
+  - action: 前端删除测试
+    expected:
+      - 点击删除按钮弹出确认对话框
+      - 确认后执行删除
+      - 删除成功后刷新列表
+      - 文件从列表移除
+
+expected_results:
+  - 文件删除功能正常
+  - 文件从存储中删除
+  - 权限控制正确
+  - 前端流程正常
+
+assertions:
+  - type: deletion
+    description: 文件删除正确
+    validate:
+      - 数据库记录删除
+      - 文件物理删除
+      - 前端列表更新

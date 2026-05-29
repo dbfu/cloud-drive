@@ -1,0 +1,97 @@
+# TC-FILE-006 上传文件-文档
+# file 模块 - 测试用例
+
+id: TC-FILE-006
+title: 上传文件-文档
+version: 1.0
+priority: P0
+module: file
+tags: [upload, document, api, backend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/3
+  - https://github.com/dbfu/cloud-drive/issues/5
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+
+test_data:
+  supported_formats:
+    - pdf
+    - doc
+    - docx
+    - xls
+    - xlsx
+    - ppt
+    - pptx
+    - txt
+  max_size: 100MB
+
+steps:
+  - action: 上传pdf文档
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+        Content-Type: "multipart/form-data"
+      body:
+        file: "test.pdf (binary)"
+        parentId: null
+    expected:
+      status: 200
+      code: 0
+      message: "上传成功"
+      data.type: "document"
+      data.mimeType: "application/pdf"
+
+  - action: 上传docx文档
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        file: "test.docx"
+    expected:
+      data.type: "document"
+      data.mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+  - action: 上传txt文本
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        file: "test.txt"
+    expected:
+      data.type: "document"
+      data.mimeType: "text/plain"
+
+  - action: 验证文件存储
+    expected:
+      - 文件存储在 uploads/{userId}/documents/
+
+expected_results:
+  - 文档文件正确上传
+  - 文件类型正确识别为document
+  - MIME类型正确识别
+
+assertions:
+  - type: api_response
+    description: 上传接口返回正确
+    validate:
+      - response.body.code === 0
+      - response.body.data.type === "document"

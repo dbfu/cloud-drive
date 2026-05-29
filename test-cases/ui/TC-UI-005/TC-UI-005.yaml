@@ -1,0 +1,104 @@
+# TC-UI-005 文件预览组件
+# ui 模块 - 测试用例
+
+id: TC-UI-005
+title: 文件预览组件
+version: 1.0
+priority: P0
+module: ui
+tags: [preview, component, frontend, rendering]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/8
+
+preconditions:
+  - 前端服务正常运行
+  - 用户已登录
+  - 用户有各种类型文件（图片、视频、文档）
+
+steps:
+  - action: 预览图片文件
+    expected:
+      - 预览弹窗/组件显示
+      - 图片正确渲染
+      - 图片完整显示
+      - 关闭按钮存在
+
+  - action: 预览图片交互
+    expected:
+      - 图片可缩放（放大/缩小）
+      - 图片可旋转（可选）
+      - 支持全屏查看（可选）
+      - ESC键关闭预览
+
+  - action: 预览视频文件
+    expected:
+      - 视频播放器显示
+      - 视频可播放
+      - 播放控制栏显示
+      - 进度条可拖动
+
+  - action: 预览视频交互
+    expected:
+      - 播放/暂停按钮正常
+      - 音量控制正常
+      - 进度拖动正常
+      - 全屏按钮正常（可选）
+
+  - action: 预览PDF文档
+    expected:
+      - PDF预览组件显示
+      - PDF内容正确渲染
+      - 支持翻页（可选）
+
+  - action: 预览txt文本
+    expected:
+      - 文本内容显示
+      - 文本可阅读
+      - 编码正确（无乱码）
+
+  - action: 预览不支持的文件类型
+    expected:
+      - 显示提示信息
+      - 或提供下载选项
+
+  - action: 关闭预览
+    expected:
+      - 关闭按钮正常
+      - ESC键关闭
+      - 预览关闭后焦点返回列表
+
+expected_results:
+  - 图片预览组件正常
+  - 视频播放器正常
+  - 文档预览正常
+  - 关闭功能正常
+
+assertions:
+  - type: image_preview
+    description: 图片预览正常
+    validate:
+      - 图片正确渲染
+      - 缩放功能正常
+      - 关闭功能正常
+
+  - type: video_preview
+    description: 视频预览正常
+    validate:
+      - 视频可播放
+      - 控制功能正常
+
+  - type: document_preview
+    description: 文档预览正常
+    validate:
+      - 内容正确显示

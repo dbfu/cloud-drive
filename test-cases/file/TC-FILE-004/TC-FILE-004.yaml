@@ -1,0 +1,99 @@
+# TC-FILE-004 上传文件-图片
+# file 模块 - 测试用例
+
+id: TC-FILE-004
+title: 上传文件-图片
+version: 1.0
+priority: P0
+module: file
+tags: [upload, image, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/3
+  - https://github.com/dbfu/cloud-drive/issues/5
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - uploads目录有写入权限
+
+test_data:
+  supported_formats:
+    - jpg
+    - jpeg
+    - png
+    - gif
+    - webp
+  max_size: 100MB
+
+steps:
+  - action: 上传jpg图片
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+        Content-Type: "multipart/form-data"
+      body:
+        file: "test.jpg (binary)"
+        parentId: null
+    expected:
+      status: 200
+      code: 0
+      message: "上传成功"
+      data.type: "image"
+      data.mimeType: "image/jpeg"
+
+  - action: 上传png图片
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        file: "test.png"
+    expected:
+      data.type: "image"
+      data.mimeType: "image/png"
+
+  - action: 验证文件存储
+    expected:
+      - 文件存储在 uploads/{userId}/images/
+      - 数据库有对应记录
+
+  - action: 前端上传测试
+    expected:
+      - 点击上传按钮弹出文件选择
+      - 选择图片后开始上传
+      - 上传进度显示
+      - 上传完成后刷新文件列表
+
+expected_results:
+  - 图片文件正确上传
+  - 文件类型正确识别为image
+  - 文件存储路径正确
+  - 前端上传流程正常
+
+assertions:
+  - type: api_response
+    description: 上传接口返回正确
+    validate:
+      - response.body.code === 0
+      - response.body.data.type === "image"
+      - response.body.data.mimeType.startsWith("image/")
+
+  - type: storage
+    description: 文件存储正确
+    validate:
+      - 文件存在于uploads目录
+      - 路径正确

@@ -1,0 +1,67 @@
+# TC-FILE-002 获取文件列表-指定文件夹
+# file 模块 - 测试用例
+
+id: TC-FILE-002
+title: 获取文件列表-指定文件夹
+version: 1.0
+priority: P1
+module: file
+tags: [file-list, folder, api, navigation]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/2
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有文件夹且文件夹内有文件
+
+steps:
+  - action: 发送获取指定文件夹内容请求
+    request:
+      method: GET
+      url: /api/files?parentId={folder_id}
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      code: 0
+      data.list: "array"
+      所有文件parentId === folder_id
+
+  - action: 测试文件夹不存在
+    request:
+      method: GET
+      url: /api/files?parentId=999999
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      返回空列表或错误提示
+
+  - action: 前端导航测试
+    expected:
+      - 点击文件夹进入子目录
+      - 面包屑导航正确显示路径
+      - 返回按钮正确返回上级
+
+expected_results:
+  - 文件夹内文件正确获取
+  - parentId参数正确过滤
+  - 前端导航功能正常
+
+assertions:
+  - type: api_response
+    description: 指定文件夹内容获取正确
+    validate:
+      - response.body.code === 0
+      - 所有item.parentId === folder_id

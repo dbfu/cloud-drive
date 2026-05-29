@@ -1,2 +1,2 @@
 // 公共 Hooks 导出
-// 示例：export { useAuth } from './useAuth'
+export { useAuth } from '../../modules/auth/hooks/use-auth'

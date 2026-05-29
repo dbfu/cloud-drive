@@ -1,0 +1,86 @@
+# TC-AUTH-001 用户注册-正常流程
+# auth 模块 - 测试用例
+
+id: TC-AUTH-001
+title: 用户注册-正常流程
+version: 1.0
+priority: P0
+module: auth
+tags: [registration, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/1
+  - https://github.com/dbfu/cloud-drive/issues/6
+
+preconditions:
+  - 后端服务正常运行
+  - 数据库连接正常
+  - 测试用户名未被占用
+
+test_data:
+  username: "testuser001"
+  password: "TestPass123!"
+
+steps:
+  - action: 发送注册请求 POST /api/auth/register
+    request:
+      method: POST
+      url: /api/auth/register
+      body:
+        username: "testuser001"
+        password: "TestPass123!"
+    expected:
+      status: 200
+      code: 0
+      message: "注册成功"
+      data.id: "number"
+      data.username: "testuser001"
+
+  - action: 验证数据库记录
+    expected:
+      - users表中存在新记录
+      - username为testuser001
+      - password已bcrypt加密
+
+  - action: 前端注册页面测试
+    expected:
+      - 注册成功后跳转到登录页面或文件管理页面
+      - 显示注册成功提示
+
+expected_results:
+  - 注册接口返回成功响应
+  - 数据库正确存储用户信息
+  - 密码使用bcrypt加密存储
+  - 前端正确处理注册流程
+
+assertions:
+  - type: api_response
+    description: 注册接口返回正确响应格式
+    validate:
+      - response.status === 200
+      - response.body.code === 0
+      - response.body.message === "注册成功"
+      - typeof response.body.data.id === "number"
+
+  - type: database
+    description: 数据库存储用户信息
+    validate:
+      - user记录存在
+      - user.username === "testuser001"
+      - user.password.startsWith("$2b$")
+
+  - type: frontend
+    description: 前端注册流程正确
+    validate:
+      - 页面显示成功提示
+      - 正确跳转页面

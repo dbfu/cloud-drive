@@ -1,0 +1,86 @@
+# TC-FILE-016 预览视频
+# file 模块 - 测试用例
+
+id: TC-FILE-016
+title: 预览视频
+version: 1.0
+priority: P0
+module: file
+tags: [preview, video, api, backend, frontend, streaming]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/5
+  - https://github.com/dbfu/cloud-drive/issues/8
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有已上传的视频文件
+
+test_data:
+  video_types:
+    - mp4
+    - webm
+    - mov
+
+steps:
+  - action: 预览mp4视频
+    request:
+      method: GET
+      url: /api/files/{video_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      Content-Type: "video/mp4"
+      支持Range请求
+
+  - action: 测试Range请求（视频分段加载）
+    request:
+      method: GET
+      url: /api/files/{video_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+        Range: "bytes=0-1024"
+    expected:
+      status: 206
+      Content-Range: "bytes 0-1024/{total_size}"
+      返回指定范围数据
+
+  - action: 前端视频预览测试
+    expected:
+      - 点击视频触发预览
+      - 视频播放器组件显示
+      - 视频正常播放
+      - 播放控制正常（播放/暂停/进度条）
+      - 音量控制正常
+      - 关闭预览正常
+
+expected_results:
+  - 视频预览接口支持流式传输
+  - Range请求正确处理
+  - 前端视频播放器正常工作
+
+assertions:
+  - type: streaming
+    description: 视频流式传输正确
+    validate:
+      - Range请求返回206
+      - Content-Range正确
+      - 视频可正常播放
+
+  - type: frontend
+    description: 前端视频播放器正常
+    validate:
+      - 播放控制正常
+      - 进度条可拖动

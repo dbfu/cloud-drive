@@ -1,0 +1,90 @@
+# TC-UI-004 文件列表展示
+# ui 模块 - 测试用例
+
+id: TC-UI-004
+title: 文件列表展示
+version: 1.0
+priority: P0
+module: ui
+tags: [file-list, component, frontend, rendering]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/7
+
+preconditions:
+  - 前端服务正常运行
+  - 用户已登录
+  - 用户有若干文件和文件夹
+
+steps:
+  - action: 查看文件列表
+    expected:
+      - 文件列表正确渲染
+      - 每个文件项显示正确信息
+
+  - action: 验证文件项显示
+    expected:
+      - 文件名正确显示
+      - 文件类型图标正确（文件夹、图片、视频、文档）
+      - 文件大小正确显示（格式化）
+      - 创建/更新时间正确显示
+
+  - action: 验证文件夹和文件排序
+    expected:
+      - 文件夹排在文件前面
+      - 或按名称/时间排序
+
+  - action: 验证文件操作入口
+    expected:
+      - 每个文件项有操作菜单/按钮
+      - 包含下载、预览、删除、重命名等选项
+      - 文件夹包含进入子目录操作
+
+  - action: 验证列表交互
+    expected:
+      - 点击文件夹进入子目录
+      - 点击文件触发预览或选中
+      - 右键菜单正确显示（如有）
+
+  - action: 验证面包屑导航
+    expected:
+      - 进入子目录后面包屑更新
+      - 点击面包屑返回上级目录
+      - 面包屑正确显示路径层级
+
+  - action: 验证文件列表刷新
+    expected:
+      - 上传后列表自动刷新
+      - 删除后列表自动更新
+      - 手动刷新按钮功能正常
+
+expected_results:
+  - 文件列表正确展示
+  - 文件信息正确显示
+  - 操作入口正确
+  - 导航功能正常
+
+assertions:
+  - type: rendering
+    description: 文件列表正确渲染
+    validate:
+      - 文件项显示完整
+      - 图标正确匹配类型
+      - 信息格式化正确
+
+  - type: interaction
+    description: 文件列表交互正常
+    validate:
+      - 文件夹导航正常
+      - 操作菜单正确
+      - 刷新功能正常
