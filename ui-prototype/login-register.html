@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云盘 - 登录</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'jakarta': ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#18181B',
+                        'secondary': '#3F3F46',
+                        'cta': '#2563EB',
+                        'cta-hover': '#1D4ED8',
+                        'background': '#FAFAFA',
+                        'text-main': '#09090B',
+                        'text-muted': '#71717A',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Prevent content jumping during loading */
+        .btn-loading {
+            min-width: 120px;
+        }
+
+        /* Focus ring visible */
+        input:focus-visible, button:focus-visible {
+            outline: 2px solid #2563EB;
+            outline-offset: 2px;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition-property: color, background-color, border-color, opacity, box-shadow;
+            transition-duration: 200ms;
+            transition-timing-function: ease-in-out;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0ms !important;
+                animation-duration: 0ms !important;
+            }
+        }
+
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Gradient background */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Validation states */
+        .input-error {
+            border-color: #EF4444 !important;
+        }
+
+        .input-success {
+            border-color: #10B981 !important;
+        }
+    </style>
+</head>
+<body class="font-jakarta antialiased">
+    <!-- Background with gradient -->
+    <div class="min-h-screen gradient-bg flex items-center justify-center p-4 sm:p-6 lg:p-8">
+
+        <!-- Glass Card Container -->
+        <div class="glass-card rounded-2xl shadow-2xl w-full max-w-md p-8 sm:p-10">
+
+            <!-- Logo & Header -->
+            <div class="text-center mb-8">
+                <!-- Cloud Icon SVG -->
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cta/10 mb-4">
+                    <svg class="w-8 h-8 text-cta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                    </svg>
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl font-bold text-primary mb-2">
+                    <span id="form-title">登录</span>
+                </h1>
+                <p class="text-secondary text-sm sm:text-base" id="form-subtitle">
+                    登录您的云盘账户
+                </p>
+            </div>
+
+            <!-- Error Message Area -->
+            <div id="error-message" class="hidden mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-red-600 text-sm font-medium" id="error-text"></p>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-6">
+
+                <!-- Username Field -->
+                <div>
+                    <label for="login-username" class="block text-sm font-medium text-primary mb-2">
+                        用户名
+                    </label>
+                    <input
+                        type="text"
+                        id="login-username"
+                        name="username"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-primary placeholder-text-muted focus:border-cta focus:ring-0 cursor-text"
+                        placeholder="请输入用户名"
+                        required
+                        minlength="3"
+                        maxlength="50"
+                        autocomplete="username"
+                    >
+                    <p id="login-username-error" class="hidden mt-2 text-sm text-red-500"></p>
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-primary mb-2">
+                        密码
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="login-password"
+                            name="password"
+                            class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-200 bg-white text-primary placeholder-text-muted focus:border-cta focus:ring-0 cursor-text"
+                            placeholder="请输入密码"
+                            required
+                            minlength="6"
+                            maxlength="100"
+                            autocomplete="current-password"
+                        >
+                        <!-- Password Toggle Button -->
+                        <button
+                            type="button"
+                            id="login-toggle-password"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded cursor-pointer hover:bg-gray-100"
+                            aria-label="显示密码"
+                        >
+                            <svg id="login-eye-icon" class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="login-password-error" class="hidden mt-2 text-sm text-red-500"></p>
+                </div>
+
+                <!-- Remember Me Checkbox -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="remember-me"
+                            name="remember"
+                            class="w-4 h-4 rounded border-gray-300 text-cta focus:ring-cta cursor-pointer"
+                        >
+                        <label for="remember-me" class="text-sm text-secondary cursor-pointer">
+                            记住我
+                        </label>
+                    </div>
+
+                    <!-- Forgot Password Link -->
+                    <a href="#" class="text-sm text-cta hover:text-cta-hover cursor-pointer">
+                        忘记密码?
+                    </a>
+                </div>
+
+                <!-- Submit Button -->
+                <button
+                    type="submit"
+                    id="login-submit-btn"
+                    class="btn-loading w-full px-6 py-3 rounded-lg bg-cta text-white font-semibold hover:bg-cta-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cta disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                    <span id="login-btn-text">登录</span>
+                    <span id="login-btn-spinner" class="hidden inline-flex items-center gap-2">
+                        <svg class="spinner w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10"/>
+                        </svg>
+                        登录中...
+                    </span>
+                </button>
+            </form>
+
+            <!-- Register Form (Hidden by default) -->
+            <form id="register-form" class="hidden space-y-6">
+
+                <!-- Username Field -->
+                <div>
+                    <label for="register-username" class="block text-sm font-medium text-primary mb-2">
+                        用户名
+                    </label>
+                    <input
+                        type="text"
+                        id="register-username"
+                        name="username"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-primary placeholder-text-muted focus:border-cta focus:ring-0 cursor-text"
+                        placeholder="请输入用户名 (3-50字符)"
+                        required
+                        minlength="3"
+                        maxlength="50"
+                        autocomplete="username"
+                    >
+                    <p id="register-username-error" class="hidden mt-2 text-sm text-red-500"></p>
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-primary mb-2">
+                        密码
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="register-password"
+                            name="password"
+                            class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-200 bg-white text-primary placeholder-text-muted focus:border-cta focus:ring-0 cursor-text"
+                            placeholder="请输入密码 (至少6字符)"
+                            required
+                            minlength="6"
+                            maxlength="100"
+                            autocomplete="new-password"
+                        >
+                        <!-- Password Toggle Button -->
+                        <button
+                            type="button"
+                            id="register-toggle-password"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded cursor-pointer hover:bg-gray-100"
+                            aria-label="显示密码"
+                        >
+                            <svg id="register-eye-icon" class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="register-password-error" class="hidden mt-2 text-sm text-red-500"></p>
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div>
+                    <label for="register-confirm-password" class="block text-sm font-medium text-primary mb-2">
+                        确认密码
+                    </label>
+                    <input
+                        type="password"
+                        id="register-confirm-password"
+                        name="confirmPassword"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-primary placeholder-text-muted focus:border-cta focus:ring-0 cursor-text"
+                        placeholder="请再次输入密码"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <p id="register-confirm-error" class="hidden mt-2 text-sm text-red-500"></p>
+                </div>
+
+                <!-- Submit Button -->
+                <button
+                    type="submit"
+                    id="register-submit-btn"
+                    class="btn-loading w-full px-6 py-3 rounded-lg bg-cta text-white font-semibold hover:bg-cta-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cta disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                    <span id="register-btn-text">注册</span>
+                    <span id="register-btn-spinner" class="hidden inline-flex items-center gap-2">
+                        <svg class="spinner w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10"/>
+                        </svg>
+                        注册中...
+                    </span>
+                </button>
+            </form>
+
+            <!-- Toggle Link -->
+            <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                <p class="text-sm text-secondary">
+                    <span id="toggle-label">还没有账户?</span>
+                    <button
+                        id="toggle-btn"
+                        type="button"
+                        class="ml-2 text-cta hover:text-cta-hover font-medium cursor-pointer"
+                    >
+                        <span id="toggle-action">注册</span>
+                    </button>
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const formTitle = document.getElementById('form-title');
+        const formSubtitle = document.getElementById('form-subtitle');
+        const toggleLabel = document.getElementById('toggle-label');
+        const toggleAction = document.getElementById('toggle-action');
+        const errorMessageDiv = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+
+        // State
+        let isLoginMode = true;
+
+        // Toggle Forms
+        toggleBtn.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+
+            if (isLoginMode) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                formTitle.textContent = '登录';
+                formSubtitle.textContent = '登录您的云盘账户';
+                toggleLabel.textContent = '还没有账户?';
+                toggleAction.textContent = '注册';
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                formTitle.textContent = '注册';
+                formSubtitle.textContent = '创建您的云盘账户';
+                toggleLabel.textContent = '已有账户?';
+                toggleAction.textContent = '登录';
+            }
+
+            // Clear errors
+            hideError();
+            clearValidationErrors();
+        });
+
+        // Password Toggle Function
+        function setupPasswordToggle(inputId, toggleBtnId, eyeIconId) {
+            const input = document.getElementById(inputId);
+            const toggleBtn = document.getElementById(toggleBtnId);
+            const eyeIcon = document.getElementById(eyeIconId);
+
+            toggleBtn.addEventListener('click', () => {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                toggleBtn.setAttribute('aria-label', isPassword ? '隐藏密码' : '显示密码');
+
+                // Toggle eye icon
+                if (isPassword) {
+                    eyeIcon.innerHTML = `
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.292 4.292M3 3l18 18"/>
+                    `;
+                } else {
+                    eyeIcon.innerHTML = `
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    `;
+                }
+            });
+        }
+
+        setupPasswordToggle('login-password', 'login-toggle-password', 'login-eye-icon');
+        setupPasswordToggle('register-password', 'register-toggle-password', 'register-eye-icon');
+
+        // Show Error Message
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
+
+        // Hide Error Message
+        function hideError() {
+            errorMessageDiv.classList.add('hidden');
+            errorText.textContent = '';
+        }
+
+        // Show Field Error
+        function showFieldError(fieldId, errorId, message) {
+            const field = document.getElementById(fieldId);
+            const error = document.getElementById(errorId);
+            field.classList.add('input-error');
+            field.classList.remove('input-success');
+            error.textContent = message;
+            error.classList.remove('hidden');
+        }
+
+        // Hide Field Error
+        function hideFieldError(fieldId, errorId) {
+            const field = document.getElementById(fieldId);
+            const error = document.getElementById(errorId);
+            field.classList.remove('input-error');
+            error.textContent = '';
+            error.classList.add('hidden');
+        }
+
+        // Clear All Validation Errors
+        function clearValidationErrors() {
+            const fields = ['login-username', 'login-password', 'register-username', 'register-password', 'register-confirm-password'];
+            const errors = ['login-username-error', 'login-password-error', 'register-username-error', 'register-password-error', 'register-confirm-error'];
+
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.classList.remove('input-error', 'input-success');
+                }
+            });
+
+            errors.forEach(errorId => {
+                const error = document.getElementById(errorId);
+                if (error) {
+                    error.textContent = '';
+                    error.classList.add('hidden');
+                }
+            });
+        }
+
+        // Validate Username (on blur)
+        function validateUsername(input, errorId) {
+            const value = input.value.trim();
+
+            if (value.length === 0) {
+                showFieldError(input.id, errorId, '用户名不能为空');
+                return false;
+            }
+
+            if (value.length < 3) {
+                showFieldError(input.id, errorId, '用户名至少需要3个字符');
+                return false;
+            }
+
+            if (value.length > 50) {
+                showFieldError(input.id, errorId, '用户名不能超过50个字符');
+                return false;
+            }
+
+            // Check for valid characters (letters, numbers, underscore)
+            if (!/^[a-zA-Z0-9_一-龥]+$/.test(value)) {
+                showFieldError(input.id, errorId, '用户名只能包含字母、数字、下划线和中文');
+                return false;
+            }
+
+            hideFieldError(input.id, errorId);
+            input.classList.add('input-success');
+            return true;
+        }
+
+        // Validate Password (on blur)
+        function validatePassword(input, errorId) {
+            const value = input.value;
+
+            if (value.length === 0) {
+                showFieldError(input.id, errorId, '密码不能为空');
+                return false;
+            }
+
+            if (value.length < 6) {
+                showFieldError(input.id, errorId, '密码至少需要6个字符');
+                return false;
+            }
+
+            if (value.length > 100) {
+                showFieldError(input.id, errorId, '密码不能超过100个字符');
+                return false;
+            }
+
+            hideFieldError(input.id, errorId);
+            input.classList.add('input-success');
+            return true;
+        }
+
+        // Validate Confirm Password
+        function validateConfirmPassword(passwordInput, confirmInput, errorId) {
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            if (confirm.length === 0) {
+                showFieldError(confirmInput.id, errorId, '请确认密码');
+                return false;
+            }
+
+            if (password !== confirm) {
+                showFieldError(confirmInput.id, errorId, '两次输入的密码不一致');
+                return false;
+            }
+
+            hideFieldError(confirmInput.id, errorId);
+            confirmInput.classList.add('input-success');
+            return true;
+        }
+
+        // Setup Blur Validation
+        document.getElementById('login-username').addEventListener('blur', function() {
+            validateUsername(this, 'login-username-error');
+        });
+
+        document.getElementById('login-password').addEventListener('blur', function() {
+            validatePassword(this, 'login-password-error');
+        });
+
+        document.getElementById('register-username').addEventListener('blur', function() {
+            validateUsername(this, 'register-username-error');
+        });
+
+        document.getElementById('register-password').addEventListener('blur', function() {
+            validatePassword(this, 'register-password-error');
+        });
+
+        document.getElementById('register-confirm-password').addEventListener('blur', function() {
+            validateConfirmPassword(
+                document.getElementById('register-password'),
+                this,
+                'register-confirm-error'
+            );
+        });
+
+        // Set Loading State
+        function setLoading(buttonId, textId, spinnerId, isLoading) {
+            const button = document.getElementById(buttonId);
+            const text = document.getElementById(textId);
+            const spinner = document.getElementById(spinnerId);
+
+            button.disabled = isLoading;
+            text.classList.toggle('hidden', isLoading);
+            spinner.classList.toggle('hidden', !isLoading);
+        }
+
+        // Login Form Submit
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const usernameInput = document.getElementById('login-username');
+            const passwordInput = document.getElementById('login-password');
+
+            // Validate all fields
+            const usernameValid = validateUsername(usernameInput, 'login-username-error');
+            const passwordValid = validatePassword(passwordInput, 'login-password-error');
+
+            if (!usernameValid || !passwordValid) {
+                return;
+            }
+
+            // Show loading
+            setLoading('login-submit-btn', 'login-btn-text', 'login-btn-spinner', true);
+
+            // Simulate API call
+            try {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Demo success - would be actual API call
+                console.log('Login successful:', {
+                    username: usernameInput.value,
+                    remember: document.getElementById('remember-me').checked
+                });
+
+                // Show success (in real app, would redirect)
+                alert('登录成功! (演示模式)');
+
+            } catch (error) {
+                showError('登录失败，请稍后重试');
+            } finally {
+                setLoading('login-submit-btn', 'login-btn-text', 'login-btn-spinner', false);
+            }
+        });
+
+        // Register Form Submit
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const usernameInput = document.getElementById('register-username');
+            const passwordInput = document.getElementById('register-password');
+            const confirmInput = document.getElementById('register-confirm-password');
+
+            // Validate all fields
+            const usernameValid = validateUsername(usernameInput, 'register-username-error');
+            const passwordValid = validatePassword(passwordInput, 'register-password-error');
+            const confirmValid = validateConfirmPassword(passwordInput, confirmInput, 'register-confirm-error');
+
+            if (!usernameValid || !passwordValid || !confirmValid) {
+                return;
+            }
+
+            // Show loading
+            setLoading('register-submit-btn', 'register-btn-text', 'register-btn-spinner', true);
+
+            // Simulate API call
+            try {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Demo success - would be actual API call
+                console.log('Register successful:', {
+                    username: usernameInput.value
+                });
+
+                // Show success and switch to login
+                alert('注册成功! 请登录 (演示模式)');
+
+                // Toggle to login mode
+                toggleBtn.click();
+
+            } catch (error) {
+                showError('注册失败，请稍后重试');
+            } finally {
+                setLoading('register-submit-btn', 'register-btn-text', 'register-btn-spinner', false);
+            }
+        });
+    </script>
+</body>
+</html>

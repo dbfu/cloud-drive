@@ -1,0 +1,92 @@
+# TC-AUTH-004 用户登录-正常流程
+# auth 模块 - 测试用例
+
+id: TC-AUTH-004
+title: 用户登录-正常流程
+version: 1.0
+priority: P0
+module: auth
+tags: [login, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/1
+  - https://github.com/dbfu/cloud-drive/issues/6
+
+preconditions:
+  - 后端服务正常运行
+  - 数据库中已存在测试用户 "testloginuser"
+
+test_data:
+  username: "testloginuser"
+  password: "TestPass123!"
+
+steps:
+  - action: 发送登录请求 POST /api/auth/login
+    request:
+      method: POST
+      url: /api/auth/login
+      body:
+        username: "testloginuser"
+        password: "TestPass123!"
+    expected:
+      status: 200
+      code: 0
+      message: "登录成功"
+      data.token: "JWT格式字符串"
+      data.user.id: "number"
+      data.user.username: "testloginuser"
+
+  - action: 验证Token有效性
+    request:
+      method: GET
+      url: /api/auth/me
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      code: 0
+      data.id: "number"
+      data.username: "testloginuser"
+
+  - action: 前端登录页面测试
+    expected:
+      - 登录成功后跳转到文件管理页面
+      - Token存储到localStorage或状态管理
+      - 显示登录成功提示
+
+expected_results:
+  - 登录接口返回Token和用户信息
+  - Token可正常用于后续认证请求
+  - 前端正确处理登录流程并存储Token
+
+assertions:
+  - type: api_response
+    description: 登录接口返回正确响应
+    validate:
+      - response.status === 200
+      - response.body.code === 0
+      - response.body.message === "登录成功"
+      - response.body.data.token.startsWith("eyJ")
+      - typeof response.body.data.user.id === "number"
+
+  - type: token_validity
+    description: Token可正常使用
+    validate:
+      - GET /api/auth/me 返回成功
+      - 返回用户信息正确
+
+  - type: frontend
+    description: 前端登录流程正确
+    validate:
+      - Token存储正确
+      - 页面跳转正确

@@ -1,0 +1,83 @@
+# TC-FILE-009 下载文件
+# file 模块 - 测试用例
+
+id: TC-FILE-009
+title: 下载文件
+version: 1.0
+priority: P0
+module: file
+tags: [download, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/4
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有已上传的文件
+
+steps:
+  - action: 下载文件
+    request:
+      method: GET
+      url: /api/files/{file_id}/download
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      Content-Type: "文件的MIME类型"
+      Content-Disposition: "attachment; filename=\"文件名\""
+      返回文件流
+
+  - action: 下载不存在的文件
+    request:
+      method: GET
+      url: /api/files/999999/download
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      code: 3001
+      message: "文件不存在"
+
+  - action: 下载他人文件
+    request:
+      method: GET
+      url: /api/files/{other_user_file_id}/download
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      code: 1003 或 3001
+
+  - action: 前端下载测试
+    expected:
+      - 点击下载按钮触发下载
+      - 下载进度显示（可选）
+      - 文件保存到本地
+
+expected_results:
+  - 文件下载功能正常
+  - Content-Disposition正确设置文件名
+  - 权限控制正确
+
+assertions:
+  - type: download
+    description: 文件下载正确
+    validate:
+      - 文件流正确返回
+      - Content-Type正确
+      - Content-Disposition包含正确文件名
+
+  - type: authorization
+    description: 权限控制正确
+    validate:
+      - 不能下载他人文件

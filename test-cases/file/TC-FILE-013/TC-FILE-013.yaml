@@ -1,0 +1,99 @@
+# TC-FILE-013 重命名文件/文件夹
+# file 模块 - 测试用例
+
+id: TC-FILE-013
+title: 重命名文件/文件夹
+version: 1.0
+priority: P1
+module: file
+tags: [rename, file, folder, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/4
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有文件和文件夹
+
+steps:
+  - action: 重命名文件
+    request:
+      method: PATCH
+      url: /api/files/{file_id}/rename
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: "新文件名.jpg"
+    expected:
+      status: 200
+      code: 0
+      message: "重命名成功"
+      data.id: file_id
+      data.name: "新文件名.jpg"
+
+  - action: 重命名文件夹
+    request:
+      method: PATCH
+      url: /api/files/{folder_id}/rename
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: "新文件夹名"
+    expected:
+      code: 0
+      data.name: "新文件夹名"
+
+  - action: 重命名为已存在名称
+    request:
+      method: PATCH
+      url: /api/files/{file_id}/rename
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: "已存在的文件名.jpg"
+    expected:
+      code: 3003
+      message: "文件名已存在"
+
+  - action: 重命名为空名称
+    request:
+      method: PATCH
+      url: /api/files/{file_id}/rename
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: ""
+    expected:
+      code: 1001
+      message: "文件名不能为空"
+
+  - action: 前端重命名测试
+    expected:
+      - 双击或右键菜单触发重命名
+      - 输入新名称
+      - 确认后更新列表
+      - 显示新名称
+
+expected_results:
+  - 重命名功能正常
+  - 同名检测正确
+  - 前端交互正常
+
+assertions:
+  - type: rename
+    description: 重命名功能正确
+    validate:
+      - 名称更新成功
+      - 数据库记录更新
+      - 前端显示更新

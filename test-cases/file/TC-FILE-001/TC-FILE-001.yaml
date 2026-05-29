@@ -1,0 +1,80 @@
+# TC-FILE-001 获取文件列表-根目录
+# file 模块 - 测试用例
+
+id: TC-FILE-001
+title: 获取文件列表-根目录
+version: 1.0
+priority: P0
+module: file
+tags: [file-list, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/2
+  - https://github.com/dbfu/cloud-drive/issues/7
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户根目录有若干文件和文件夹
+
+steps:
+  - action: 发送获取根目录文件列表请求
+    request:
+      method: GET
+      url: /api/files
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      code: 0
+      data.list: "array"
+      data.total: "number"
+      data.page: 1
+      data.pageSize: 50
+
+  - action: 验证文件列表结构
+    expected:
+      - 每个文件项包含 id, name, type, size, parentId, createdAt, updatedAt
+      - type 包含 folder, image, video, document, other
+      - 文件夹排在前面
+
+  - action: 前端文件列表展示测试
+    expected:
+      - 文件列表正确渲染
+      - 文件夹和文件图标正确显示
+      - 空状态提示正确显示（当列表为空时）
+
+expected_results:
+  - 文件列表接口返回正确格式
+  - 分页信息正确
+  - 前端正确展示文件列表
+
+assertions:
+  - type: api_response
+    description: 文件列表响应格式正确
+    validate:
+      - response.body.code === 0
+      - Array.isArray(response.body.data.list)
+      - typeof response.body.data.total === "number"
+
+  - type: data_structure
+    description: 文件项结构正确
+    validate:
+      - 每个item包含必填字段
+      - type值在有效范围内
+
+  - type: frontend
+    description: 前端渲染正确
+    validate:
+      - 文件列表组件正确渲染
+      - 文件图标正确匹配type

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云盘 - 文件预览</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'jakarta': ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#18181B',
+                        'secondary': '#3F3F46',
+                        'cta': '#2563EB',
+                        'cta-hover': '#1D4ED8',
+                        'background': '#FAFAFA',
+                        'text-main': '#09090B',
+                        'text-muted': '#71717A',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Focus ring visible */
+        button:focus-visible {
+            outline: 2px solid #2563EB;
+            outline-offset: 2px;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+            transition-duration: 200ms;
+            transition-timing-function: ease-in-out;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0ms !important;
+                animation-duration: 0ms !important;
+            }
+        }
+
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Modal animation */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .modal-active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Image zoom */
+        .image-preview-container {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-preview-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transform-origin: center center;
+        }
+
+        /* Video player styling */
+        video::-webkit-media-controls-panel {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        /* PDF viewer placeholder */
+        .pdf-placeholder {
+            background: linear-gradient(to bottom, #f0f0f0 0%, #fff 100%);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Dark overlay */
+        .dark-overlay {
+            background: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body class="font-jakarta antialiased">
+
+    <!-- Demo Page: Click buttons to preview different file types -->
+    <div class="min-h-screen gradient-bg flex items-center justify-center p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="glass-card rounded-2xl shadow-2xl w-full max-w-lg p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cta/10 mb-4">
+                <svg class="w-8 h-8 text-cta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+            </div>
+
+            <h1 class="text-2xl font-bold text-primary mb-4">文件预览演示</h1>
+            <p class="text-secondary mb-8">点击下方按钮查看不同类型文件的预览效果</p>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button
+                    onclick="showImagePreview()"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 cursor-pointer"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    图片预览
+                </button>
+
+                <button
+                    onclick="showVideoPreview()"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 cursor-pointer"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    视频预览
+                </button>
+
+                <button
+                    onclick="showPdfPreview()"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 cursor-pointer"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    PDF预览
+                </button>
+
+                <button
+                    onclick="showTextPreview()"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 cursor-pointer"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    文档预览
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="image-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center dark-overlay">
+        <div class="relative w-full h-full flex items-center justify-center p-8">
+            <!-- Close Button -->
+            <button
+                onclick="closeModal('image-modal')"
+                class="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer z-10"
+                aria-label="关闭"
+            >
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <!-- Toolbar -->
+            <div class="absolute top-4 left-4 flex items-center gap-2 z-10">
+                <!-- Zoom Controls -->
+                <button
+                    onclick="zoomOut()"
+                    class="p-2 rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer"
+                    aria-label="缩小"
+                >
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                    </svg>
+                </button>
+                <button
+                    onclick="zoomIn()"
+                    class="p-2 rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer"
+                    aria-label="放大"
+                >
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                    </svg>
+                </button>
+                <button
+                    onclick="resetZoom()"
+                    class="p-2 rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer"
+                    aria-label="重置"
+                >
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- File Info -->
+            <div class="absolute bottom-4 left-4 glass-card rounded-lg p-3 z-10">
+                <p class="text-sm font-semibold text-primary">vacation.jpg</p>
+                <p class="text-xs text-secondary">2.4 MB · 1920x1080 · 2024-01-15</p>
+            </div>
+
+            <!-- Download Button -->
+            <button
+                onclick="downloadFile()"
+                class="absolute bottom-4 right-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cta text-white font-semibold hover:bg-cta-hover cursor-pointer z-10"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                下载
+            </button>
+
+            <!-- Image Container -->
+            <div class="image-preview-container max-w-4xl max-h-[80vh] rounded-lg">
+                <!-- Using placeholder image from unsplash -->
+                <img
+                    id="preview-image"
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d6df85?w=800"
+                    alt="Vacation photo preview"
+                    class="rounded-lg shadow-2xl"
+                    style="transform: scale(1);"
+                >
+            </div>
+
+            <!-- Navigation Arrows -->
+            <button
+                onclick="previousFile()"
+                class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer z-10"
+                aria-label="上一个"
+            >
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <button
+                onclick="nextFile()"
+                class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer z-10"
+                aria-label="下一个"
+            >
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Video Preview Modal -->
+    <div id="video-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center dark-overlay">
+        <div class="relative w-full h-full flex items-center justify-center p-8">
+            <!-- Close Button -->
+            <button
+                onclick="closeModal('video-modal')"
+                class="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer z-10"
+                aria-label="关闭"
+            >
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <!-- File Info -->
+            <div class="absolute top-4 left-4 glass-card rounded-lg p-3 z-10">
+                <p class="text-sm font-semibold text-primary">tutorial.mp4</p>
+                <p class="text-xs text-secondary">128 MB · 10:32 · 2024-01-10</p>
+            </div>
+
+            <!-- Download Button -->
+            <button
+                onclick="downloadFile()"
+                class="absolute bottom-4 right-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cta text-white font-semibold hover:bg-cta-hover cursor-pointer z-10"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                下载
+            </button>
+
+            <!-- Video Player -->
+            <div class="w-full max-w-4xl bg-black rounded-lg overflow-hidden shadow-2xl">
+                <video
+                    id="preview-video"
+                    controls
+                    class="w-full"
+                    poster="https://images.unsplash.com/photo-1536240478700-86c889868588?w=800"
+                >
+                    <!-- Demo video source -->
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    您的浏览器不支持视频播放
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Preview Modal -->
+    <div id="pdf-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center dark-overlay">
+        <div class="relative w-full h-full flex flex-col items-center p-8">
+            <!-- Close Button -->
+            <button
+                onclick="closeModal('pdf-modal')"
+                class="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer z-10"
+                aria-label="关闭"
+            >
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <!-- Toolbar -->
+            <div class="absolute top-4 left-4 flex items-center gap-2 z-10">
+                <button
+                    onclick="pdfPrevPage()"
+                    class="p-2 rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer"
+                    aria-label="上一页"
+                >
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <span class="px-4 py-2 rounded-lg bg-white/10 text-white text-sm font-medium">
+                    第 <span id="pdf-page-num">1</span> 页
+                </span>
+                <button
+                    onclick="pdfNextPage()"
+                    class="p-2 rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer"
+                    aria-label="下一页"
+                >
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- File Info -->
+            <div class="absolute top-4 left-1/2 -translate-x-1/2 glass-card rounded-lg p-3 z-10">
+                <p class="text-sm font-semibold text-primary">report.pdf</p>
+                <p class="text-xs text-secondary">5.2 MB · 15页 · 2024-01-08</p>
+            </div>
+
+            <!-- Download Button -->
+            <button
+                onclick="downloadFile()"
+                class="absolute bottom-4 right-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cta text-white font-semibold hover:bg-cta-hover cursor-pointer z-10"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                下载
+            </button>
+
+            <!-- PDF Viewer Placeholder -->
+            <div class="w-full max-w-3xl h-full max-h-[80vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col">
+                <!-- PDF Header -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10,19L12,15H9V10H15V15.5L13,19H10Z"/>
+                            </svg>
+                            <span class="font-semibold text-primary">report.pdf</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Content (Simulated) -->
+                <div class="flex-1 overflow-y-auto p-8">
+                    <div class="max-w-2xl mx-auto space-y-6">
+                        <!-- Simulated PDF Page -->
+                        <div class="bg-gray-50 rounded-lg p-8 border-2 border-gray-200">
+                            <h1 class="text-2xl font-bold text-primary mb-4">项目报告</h1>
+                            <h2 class="text-lg font-semibold text-secondary mb-3">第一章：项目概述</h2>
+                            <p class="text-secondary leading-relaxed mb-4">
+                                本报告旨在详细说明项目的整体架构、技术实现方案以及预期目标。通过系统化的分析和设计，我们确保项目能够高效、稳定地运行。
+                            </p>
+                            <h3 class="text-md font-semibold text-primary mb-2">1.1 项目背景</h3>
+                            <p class="text-secondary leading-relaxed mb-4">
+                                随着云计算技术的发展，个人云盘已经成为日常工作中不可或缺的工具。本项目致力于提供一个简单、实用的云盘解决方案。
+                            </p>
+                            <h3 class="text-md font-semibold text-primary mb-2">1.2 技术栈</h3>
+                            <ul class="list-disc list-inside text-secondary space-y-1">
+                                <li>前端：React 18 + Vite 5 + Tailwind CSS</li>
+                                <li>后端：Fastify 4 + Prisma 5 + MySQL 8</li>
+                                <li>认证：JWT Token</li>
+                                <li>存储：本地文件系统</li>
+                            </ul>
+                        </div>
+
+                        <!-- Page indicator -->
+                        <div class="text-center text-xs text-text-muted">
+                            - 1 / 15 -
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Text Document Preview Modal -->
+    <div id="text-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center dark-overlay">
+        <div class="relative w-full h-full flex items-center justify-center p-8">
+            <!-- Close Button -->
+            <button
+                onclick="closeModal('text-modal')"
+                class="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer z-10"
+                aria-label="关闭"
+            >
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <!-- File Info -->
+            <div class="absolute top-4 left-4 glass-card rounded-lg p-3 z-10">
+                <p class="text-sm font-semibold text-primary">notes.txt</p>
+                <p class="text-xs text-secondary">12 KB · 2024-01-12</p>
+            </div>
+
+            <!-- Download Button -->
+            <button
+                onclick="downloadFile()"
+                class="absolute bottom-4 right-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cta text-white font-semibold hover:bg-cta-hover cursor-pointer z-10"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                下载
+            </button>
+
+            <!-- Text Viewer -->
+            <div class="w-full max-w-3xl h-full max-h-[80vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col">
+                <!-- Text Header -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="font-semibold text-primary">notes.txt</span>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="flex-1 overflow-y-auto p-6">
+                    <pre class="font-mono text-sm text-primary leading-relaxed whitespace-pre-wrap"># 项目笔记
+
+## 开发计划
+
+### 第一阶段：基础架构
+- 设置项目结构
+- 配置开发环境
+- 实现用户认证系统
+
+### 第二阶段：核心功能
+- 文件上传和下载
+- 文件列表管理
+- 文件夹操作
+
+### 第三阶段：增强功能
+- 文件预览功能
+- 搜索和筛选
+- 性能优化
+
+## 技术要点
+
+### 前端
+- 使用 Zustand 进行状态管理
+- Tailwind CSS 实现响应式设计
+- 组件化开发，保持代码整洁
+
+### 后端
+- Fastify 高性能框架
+- Prisma ORM 简化数据库操作
+- JWT 认证保护 API
+
+### 文件处理
+- 支持多种文件格式
+- 文件大小限制 100MB
+- 用户隔离存储
+
+## 注意事项
+
+1. 确保所有 API 都有认证保护
+2. 文件名需要唯一化处理
+3. 定期清理临时文件
+4. 监控存储空间使用情况
+</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentZoom = 1;
+        let pdfPage = 1;
+        const totalPdfPages = 15;
+
+        // Show Preview Functions
+        function showImagePreview() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('modal-enter');
+                modal.classList.add('modal-active');
+            }, 10);
+        }
+
+        function showVideoPreview() {
+            const modal = document.getElementById('video-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('modal-enter');
+                modal.classList.add('modal-active');
+            }, 10);
+        }
+
+        function showPdfPreview() {
+            const modal = document.getElementById('pdf-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('modal-enter');
+                modal.classList.add('modal-active');
+            }, 10);
+        }
+
+        function showTextPreview() {
+            const modal = document.getElementById('text-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('modal-enter');
+                modal.classList.add('modal-active');
+            }, 10);
+        }
+
+        // Close Modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('modal-enter');
+            modal.classList.remove('modal-active');
+
+            // Pause video if closing video modal
+            if (modalId === 'video-modal') {
+                const video = document.getElementById('preview-video');
+                video.pause();
+            }
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Image Zoom Functions
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.25, 3);
+            updateImageZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.25, 0.5);
+            updateImageZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            updateImageZoom();
+        }
+
+        function updateImageZoom() {
+            const img = document.getElementById('preview-image');
+            img.style.transform = `scale(${currentZoom})`;
+        }
+
+        // PDF Page Navigation
+        function pdfPrevPage() {
+            pdfPage = Math.max(pdfPage - 1, 1);
+            document.getElementById('pdf-page-num').textContent = pdfPage;
+        }
+
+        function pdfNextPage() {
+            pdfPage = Math.min(pdfPage + 1, totalPdfPages);
+            document.getElementById('pdf-page-num').textContent = pdfPage;
+        }
+
+        // File Navigation (Demo)
+        function previousFile() {
+            console.log('Previous file');
+            alert('上一个文件 (演示)');
+        }
+
+        function nextFile() {
+            console.log('Next file');
+            alert('下一个文件 (演示)');
+        }
+
+        // Download (Demo)
+        function downloadFile() {
+            console.log('Download file');
+            alert('下载文件 (演示)');
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal('image-modal');
+                closeModal('video-modal');
+                closeModal('pdf-modal');
+                closeModal('text-modal');
+            }
+
+            // Arrow keys for image zoom
+            if (!document.getElementById('image-modal').classList.contains('hidden')) {
+                if (e.key === '+' || e.key === '=') {
+                    zoomIn();
+                } else if (e.key === '-') {
+                    zoomOut();
+                } else if (e.key === 'ArrowLeft') {
+                    previousFile();
+                } else if (e.key === 'ArrowRight') {
+                    nextFile();
+                }
+            }
+
+            // Arrow keys for PDF pages
+            if (!document.getElementById('pdf-modal').classList.contains('hidden')) {
+                if (e.key === 'ArrowLeft') {
+                    pdfPrevPage();
+                } else if (e.key === 'ArrowRight') {
+                    pdfNextPage();
+                }
+            }
+        });
+
+        // Click outside to close
+        document.getElementById('image-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'image-modal') {
+                closeModal('image-modal');
+            }
+        });
+
+        document.getElementById('video-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'video-modal') {
+                closeModal('video-modal');
+            }
+        });
+
+        document.getElementById('pdf-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'pdf-modal') {
+                closeModal('pdf-modal');
+            }
+        });
+
+        document.getElementById('text-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'text-modal') {
+                closeModal('text-modal');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+# TC-FILE-007 上传文件-大小限制
+# file 模块 - 测试用例
+
+id: TC-FILE-007
+title: 上传文件-大小限制
+version: 1.0
+priority: P1
+module: file
+tags: [upload, size-limit, api, validation]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/3
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 配置单文件大小限制为100MB
+
+test_data:
+  max_size: 100MB
+  test_file_over_limit: 101MB
+
+steps:
+  - action: 上传超过100MB的文件
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+        Content-Type: "multipart/form-data"
+      body:
+        file: "large_file.mp4 (101MB)"
+    expected:
+      status: 200
+      code: 3005
+      message: "文件大小超限"
+      data: null
+
+  - action: 上传恰好100MB的文件（边界值）
+    request:
+      method: POST
+      url: /api/files/upload
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        file: "boundary_file.mp4 (100MB)"
+    expected:
+      code: 0
+      上传成功
+
+  - action: 前端测试
+    expected:
+      - 上传前检查文件大小
+      - 超大文件显示提示
+      - 禁止上传超限文件
+
+expected_results:
+  - 文件大小限制正确执行
+  - 边界值正确处理
+  - 前端正确提示
+
+assertions:
+  - type: validation
+    description: 文件大小限制生效
+    validate:
+      - >100MB返回3005错误
+      - <=100MB上传成功

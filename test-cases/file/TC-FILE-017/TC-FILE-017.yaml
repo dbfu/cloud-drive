@@ -1,0 +1,86 @@
+# TC-FILE-017 预览文档
+# file 模块 - 测试用例
+
+id: TC-FILE-017
+title: 预览文档
+version: 1.0
+priority: P1
+module: file
+tags: [preview, document, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/5
+  - https://github.com/dbfu/cloud-drive/issues/8
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有已上传的文档文件
+
+test_data:
+  document_types:
+    - pdf
+    - doc/docx
+    - txt
+
+steps:
+  - action: 预览PDF文档
+    request:
+      method: GET
+      url: /api/files/{pdf_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      Content-Type: "application/pdf"
+      返回PDF文件流或预览数据
+
+  - action: 预览txt文本文件
+    request:
+      method: GET
+      url: /api/files/{txt_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      返回文本内容或预览数据
+
+  - action: 预览docx文档
+    request:
+      method: GET
+      url: /api/files/{docx_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      返回预览数据或提示不支持在线预览
+
+  - action: 前端文档预览测试
+    expected:
+      - 点击文档触发预览
+      - PDF使用iframe或PDF.js渲染
+      - txt文本直接显示内容
+      - 关闭预览正常
+
+expected_results:
+  - PDF预览正常
+  - txt文本预览正常
+  - 其他文档有合理处理方式
+  - 前端预览组件正常
+
+assertions:
+  - type: preview
+    description: 文档预览正确
+    validate:
+      - PDF可预览
+      - txt内容可显示
+      - 前端渲染正确

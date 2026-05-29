@@ -1,0 +1,79 @@
+# TC-UI-002 注册页面渲染
+# ui 模块 - 测试用例
+
+id: TC-UI-002
+title: 注册页面渲染
+version: 1.0
+priority: P0
+module: ui
+tags: [register, page, frontend, rendering]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/6
+
+preconditions:
+  - 前端服务正常运行
+  - 浏览器可正常访问
+
+steps:
+  - action: 访问注册页面
+    url: /register
+    expected:
+      - 页面正常渲染
+      - 无JavaScript错误
+      - 样式正确加载
+
+  - action: 验证页面元素
+    expected:
+      - 用户名输入框存在
+      - 密码输入框存在
+      - 确认密码输入框存在（可选）
+      - 注册按钮存在
+      - 登录链接存在
+
+  - action: 验证表单功能
+    expected:
+      - 用户名输入框可输入
+      - 密码输入框可输入
+      - 密码显示为密码类型
+      - 注册按钮可点击
+
+  - action: 验证表单验证
+    expected:
+      - 用户名长度限制提示
+      - 密码长度限制提示
+      - 密码一致性验证（如有确认密码）
+      - 即时验证反馈
+
+  - action: 验证注册成功流程
+    expected:
+      - 注册成功显示提示
+      - 自动跳转登录页面或自动登录
+
+expected_results:
+  - 注册页面完整渲染
+  - 表单验证正确
+  - 注册流程正常
+
+assertions:
+  - type: rendering
+    description: 页面正确渲染
+    validate:
+      - 页面无错误
+      - 所有元素可见
+
+  - type: validation
+    description: 表单验证正确
+    validate:
+      - 长度限制提示
+      - 即时反馈

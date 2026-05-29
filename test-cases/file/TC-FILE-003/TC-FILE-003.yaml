@@ -1,0 +1,82 @@
+# TC-FILE-003 获取文件列表-分页
+# file 模块 - 测试用例
+
+id: TC-FILE-003
+title: 获取文件列表-分页
+version: 1.0
+priority: P1
+module: file
+tags: [file-list, pagination, api]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/2
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户根目录文件数量超过pageSize
+
+steps:
+  - action: 测试默认分页
+    request:
+      method: GET
+      url: /api/files
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      page: 1
+      pageSize: 50
+      list.length <= 50
+
+  - action: 测试自定义pageSize
+    request:
+      method: GET
+      url: /api/files?page=1&pageSize=10
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      page: 1
+      pageSize: 10
+      list.length <= 10
+
+  - action: 测试第二页
+    request:
+      method: GET
+      url: /api/files?page=2&pageSize=10
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      page: 2
+      返回不同于第一页的文件
+
+  - action: 测试无效分页参数
+    request:
+      method: GET
+      url: /api/files?page=-1&pageSize=0
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      code: 1001 或使用默认值
+
+expected_results:
+  - 分页参数正确处理
+  - 边界值正确处理
+  - total值准确反映文件总数
+
+assertions:
+  - type: pagination
+    description: 分页功能正确
+    validate:
+      - pageSize限制生效
+      - 不同page返回不同内容
+      - total值准确

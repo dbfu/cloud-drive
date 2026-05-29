@@ -1,0 +1,87 @@
+# TC-FILE-015 预览图片
+# file 模块 - 测试用例
+
+id: TC-FILE-015
+title: 预览图片
+version: 1.0
+priority: P0
+module: file
+tags: [preview, image, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/5
+  - https://github.com/dbfu/cloud-drive/issues/8
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有已上传的图片文件
+
+test_data:
+  image_types:
+    - jpg/jpeg
+    - png
+    - gif
+    - webp
+
+steps:
+  - action: 预览jpg图片
+    request:
+      method: GET
+      url: /api/files/{image_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      Content-Type: "image/jpeg"
+      返回图片流
+
+  - action: 预览png图片
+    request:
+      method: GET
+      url: /api/files/{png_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      Content-Type: "image/png"
+
+  - action: 预览gif图片
+    request:
+      method: GET
+      url: /api/files/{gif_id}/preview
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      Content-Type: "image/gif"
+      GIF动画正常播放
+
+  - action: 前端图片预览测试
+    expected:
+      - 点击图片触发预览
+      - 预览弹窗/组件显示图片
+      - 图片正确渲染
+      - 支持缩放/旋转等操作（可选）
+      - 关闭预览正常
+
+expected_results:
+  - 图片预览接口返回正确内容
+  - Content-Type正确设置
+  - 前端预览组件正常渲染
+
+assertions:
+  - type: preview
+    description: 图片预览正确
+    validate:
+      - 返回文件流
+      - Content-Type正确
+      - 图片可正常显示

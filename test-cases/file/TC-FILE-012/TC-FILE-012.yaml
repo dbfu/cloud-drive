@@ -1,0 +1,77 @@
+# TC-FILE-012 删除文件夹-递归删除
+# file 模块 - 测试用例
+
+id: TC-FILE-012
+title: 删除文件夹-递归删除
+version: 1.0
+priority: P1
+module: file
+tags: [delete, folder, recursive, api, backend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/4
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有文件夹且文件夹内有子文件和子文件夹
+
+steps:
+  - action: 创建测试文件夹结构
+    description: 创建文件夹层级结构用于测试
+    structure:
+      - folder1/
+        - subfolder/
+          - file1.txt
+        - file2.jpg
+        - file3.pdf
+
+  - action: 删除文件夹
+    request:
+      method: DELETE
+      url: /api/files/{folder1_id}
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      status: 200
+      code: 0
+      message: "删除成功"
+
+  - action: 验证递归删除
+    expected:
+      - folder1及其所有子项全部删除
+      - 数据库记录全部删除
+      - 文件存储全部删除
+
+  - action: 验证删除完整性
+    request:
+      method: GET
+      url: /api/files
+      headers:
+        Authorization: "Bearer {token}"
+    expected:
+      - folder1不在列表中
+      - 子文件不在列表中
+
+expected_results:
+  - 文件夹删除触发递归删除
+  - 所有子文件和子文件夹被删除
+  - 存储和数据库完全清理
+
+assertions:
+  - type: recursive_deletion
+    description: 递归删除正确
+    validate:
+      - 父文件夹删除后子项不存在
+      - 数据库无残留记录
+      - 文件存储无残留文件

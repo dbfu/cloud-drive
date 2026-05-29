@@ -1,0 +1,110 @@
+# TC-FILE-010 创建文件夹
+# file 模块 - 测试用例
+
+id: TC-FILE-010
+title: 创建文件夹
+version: 1.0
+priority: P0
+module: file
+tags: [folder, create, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/4
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+
+steps:
+  - action: 在根目录创建文件夹
+    request:
+      method: POST
+      url: /api/files/folder
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: "我的文档"
+        parentId: null
+    expected:
+      status: 200
+      code: 0
+      message: "创建成功"
+      data.id: "number"
+      data.name: "我的文档"
+      data.type: "folder"
+      data.parentId: null
+
+  - action: 在文件夹内创建子文件夹
+    request:
+      method: POST
+      url: /api/files/folder
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: "子文件夹"
+        parentId: {folder_id}
+    expected:
+      data.parentId === folder_id
+
+  - action: 创建同名文件夹
+    request:
+      method: POST
+      url: /api/files/folder
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: "我的文档" (已存在)
+        parentId: null
+    expected:
+      code: 3003
+      message: "文件名已存在"
+
+  - action: 创建空名称文件夹
+    request:
+      method: POST
+      url: /api/files/folder
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        name: ""
+        parentId: null
+    expected:
+      code: 1001
+      message: "文件名不能为空"
+
+  - action: 前端创建文件夹测试
+    expected:
+      - 点击新建文件夹按钮
+      - 输入文件夹名称
+      - 创建成功后刷新列表
+      - 新文件夹显示在列表中
+
+expected_results:
+  - 文件夹创建功能正常
+  - 同名检测正确
+  - 参数校验正确
+  - 前端流程正常
+
+assertions:
+  - type: api_response
+    description: 创建文件夹响应正确
+    validate:
+      - response.body.code === 0
+      - response.body.data.type === "folder"
+      - response.body.data.size === 0
+
+  - type: database
+    description: 数据库记录正确
+    validate:
+      - files表有新记录
+      - type为folder

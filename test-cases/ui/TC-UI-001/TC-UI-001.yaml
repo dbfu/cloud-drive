@@ -1,0 +1,83 @@
+# TC-UI-001 登录页面渲染
+# ui 模块 - 测试用例
+
+id: TC-UI-001
+title: 登录页面渲染
+version: 1.0
+priority: P0
+module: ui
+tags: [login, page, frontend, rendering]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/6
+
+preconditions:
+  - 前端服务正常运行
+  - 浏览器可正常访问
+
+steps:
+  - action: 访问登录页面
+    url: /login
+    expected:
+      - 页面正常渲染
+      - 无JavaScript错误
+      - 样式正确加载
+
+  - action: 验证页面元素
+    expected:
+      - 用户名输入框存在
+      - 密码输入框存在
+      - 登录按钮存在
+      - 注册链接存在
+      - 页面标题正确
+
+  - action: 验证表单功能
+    expected:
+      - 用户名输入框可输入
+      - 密码输入框可输入
+      - 密码输入框显示为密码类型（隐藏内容）
+      - 登录按钮可点击
+
+  - action: 验证表单验证
+    expected:
+      - 空用户名提交显示错误提示
+      - 空密码提交显示错误提示
+      - 错误提示样式正确
+
+  - action: 验证响应式设计
+    description: 测试不同屏幕尺寸
+    expected:
+      - 桌面端布局正确
+      - 移动端布局正确（适配）
+      - 表单元素不溢出
+
+expected_results:
+  - 登录页面完整渲染
+  - 所有元素正确显示
+  - 表单交互正常
+  - 响应式适配正常
+
+assertions:
+  - type: rendering
+    description: 页面正确渲染
+    validate:
+      - 页面无错误
+      - 所有元素可见
+      - 样式正确
+
+  - type: interaction
+    description: 表单交互正常
+    validate:
+      - 输入框可输入
+      - 按钮可点击
+      - 验证提示显示

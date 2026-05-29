@@ -1,0 +1,101 @@
+# TC-FILE-014 移动文件/文件夹
+# file 模块 - 测试用例
+
+id: TC-FILE-014
+title: 移动文件/文件夹
+version: 1.0
+priority: P1
+module: file
+tags: [move, file, folder, api, backend, frontend]
+
+created_at: 2026-05-29
+updated_at: 2026-05-29
+status: active
+
+history:
+  - version: 1.0
+    date: 2026-05-29
+    author: 测试
+    change: 初始创建
+
+related_issues:
+  - https://github.com/dbfu/cloud-drive/issues/4
+
+preconditions:
+  - 后端服务正常运行
+  - 用户已登录获取Token
+  - 用户有文件和多个文件夹
+
+steps:
+  - action: 移动文件到文件夹
+    request:
+      method: POST
+      url: /api/files/{file_id}/move
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        targetId: {folder_id}
+    expected:
+      status: 200
+      code: 0
+      message: "移动成功"
+      data.id: file_id
+      data.parentId: folder_id
+
+  - action: 移动文件到根目录
+    request:
+      method: POST
+      url: /api/files/{file_id}/move
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        targetId: null
+    expected:
+      data.parentId: null
+
+  - action: 移动文件夹到另一个文件夹
+    request:
+      method: POST
+      url: /api/files/{folder_id}/move
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        targetId: {another_folder_id}
+    expected:
+      文件夹及其子项一起移动
+
+  - action: 移动到不存在的文件夹
+    request:
+      method: POST
+      url: /api/files/{file_id}/move
+      headers:
+        Authorization: "Bearer {token}"
+      body:
+        targetId: 999999
+    expected:
+      code: 3002
+      message: "文件夹不存在"
+
+  - action: 移动到目标文件夹已有同名文件
+    expected:
+      code: 3003
+      message: "文件名已存在"
+
+  - action: 前端拖拽移动测试
+    expected:
+      - 拖拽文件到目标文件夹
+      - 移动成功后更新列表
+      - 文件出现在目标文件夹中
+
+expected_results:
+  - 移动功能正常
+  - 目标文件夹验证正确
+  - 同名检测正确
+  - 前端拖拽交互正常
+
+assertions:
+  - type: move
+    description: 移动功能正确
+    validate:
+      - parentId正确更新
+      - 移动后文件在目标位置
