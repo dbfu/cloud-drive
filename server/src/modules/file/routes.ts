@@ -156,7 +156,7 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
           type: 'object',
           properties: {
             name: { type: 'string' },
-            parentId: { type: 'number' },
+            parentId: { type: ['number', 'null'] },
           },
           required: ['name'],
         },
